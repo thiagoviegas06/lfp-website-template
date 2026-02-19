@@ -246,11 +246,23 @@ microelectrode arrays using raw local field potential">
             <div class="is-size-5 publication-authors">
               <!-- TODO: Replace with your paper authors and their personal links -->
               <span class="author-block">
-                <a href="FIRST AUTHOR PERSONAL LINK" target="_blank">First Author</a><sup>*</sup>,</span>
+                <a href="#" target="_blank">Tianxiao He</a><sup>*</sup>,</span>
                 <span class="author-block">
-                  <a href="SECOND AUTHOR PERSONAL LINK" target="_blank">Second Author</a><sup>*</sup>,</span>
-                  <span class="author-block">
-                    <a href="THIRD AUTHOR PERSONAL LINK" target="_blank">Third Author</a>
+                  <a href="#" target="_blank">Malhar Patel</a><sup>*</sup>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Chenyi Li</a>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Anna Maslarova</a>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Mihály Vöröslakos</a>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Nalini Ramanathan</a>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Wei-Lun Hung</a>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Gyorgy Buzsáki</a>,</span>
+                <span class="author-block">
+                  <a href="#" target="_blank">Erdem Varol</a>
                   </span>
                   </div>
 
@@ -342,7 +354,23 @@ microelectrode arrays using raw local field potential">
         <div class="content has-text-justified">
           <!-- TODO: Replace with your paper abstract -->
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ullamcorper tellus sed ante aliquam tempus. Etiam porttitor urna feugiat nibh elementum, et tempor dolor mattis. Donec accumsan enim augue, a vulputate nisi sodales sit amet. Proin bibendum ex eget mauris cursus euismod nec et nibh. Maecenas ac gravida ante, nec cursus dui. Vivamus purus nibh, placerat ac purus eget, sagittis vestibulum metus. Sed vestibulum bibendum lectus gravida commodo. Pellentesque auctor leo vitae sagittis suscipit.
+Recent advances in large-scale neural recordings have enabled accurate decoding
+of behavior and cognitive states, yet decoding anatomical regions remains underexplored, despite being crucial for consistent targeting in multiday recordings and
+effective deep brain stimulation. Current approaches typically rely on external
+anatomical information, from atlas-based planning to post hoc histology, which
+are limited in precision, longitudinal applicability, and real-time feedback. In
+this work, we develop a self-supervised learning framework, Lfp2vec, to infer
+anatomical regions directly from the neural signal in vivo. We adapt an audiopretrained transformer model by continuing self-supervised training on a large
+corpus of unlabeled local-field-potential (LFP) data, then fine-tuning for anatomical region decoding. Ablations show that combining out-of-domain initialization
+with in-domain self-supervision outperforms training from scratch. We demonstrate that our method achieves strong zero-shot generalization across different
+labs and probe geometries, and outperforms state-of-the-art self-supervised models
+on electrophysiology data. The learned embeddings form anatomically coherent
+clusters and transfer effectively to downstream tasks like disease classification
+with minimal fine-tuning. Altogether, our approach enables zero-shot prediction
+of brain regions in novel subjects, demonstrates that LFP signals encode rich
+anatomical information, and establishes self-supervised learning on raw LFP as
+a foundation to learn representations that can be tuned for diverse neural decoding tasks. Code to reproduce our results is found in the github repository at
+<a href="https://github.com/tianxiao18/Lfp2vec" target="_blank">https://github.com/tianxiao18/Lfp2vec</a>.
           </p>
         </div>
       </div>
