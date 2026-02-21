@@ -246,23 +246,23 @@ microelectrode arrays using raw local field potential">
             <div class="is-size-5 publication-authors">
               <!-- TODO: Replace with your paper authors and their personal links -->
               <span class="author-block">
-                <a href="#" target="_blank">Tianxiao He</a><sup>*</sup>,</span>
+                <a href="#" target="_blank">Tianxiao He</a><sup>1,*</sup>,</span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Malhar Patel</a><sup>*</sup>,</span>
+                  <a href="#" target="_blank">Malhar Patel</a><sup>1,*</sup>,</span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Chenyi Li</a>,</span>
+                  <a href="#" target="_blank">Chenyi Li</a><sup>1</sup></span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Anna Maslarova</a>,</span>
+                  <a href="#" target="_blank">Anna Maslarova</a><sup>2</sup></span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Mihály Vöröslakos</a>,</span>
+                  <a href="#" target="_blank">Mihály Vöröslakos</a><sup>2</sup></span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Nalini Ramanathan</a>,</span>
+                  <a href="#" target="_blank">Nalini Ramanathan</a><sup>1</sup></span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Wei-Lun Hung</a>,</span>
+                  <a href="#" target="_blank">Wei-Lun Hung</a><sup>1</sup></span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Gyorgy Buzsáki</a>,</span>
+                  <a href="#" target="_blank">Gyorgy Buzsáki</a><sup>2</sup></span>
                 <span class="author-block">
-                  <a href="#" target="_blank">Erdem Varol</a>
+                  <a href="#" target="_blank">Erdem Varol</a><sup>1,2</sup>
                   </span>
                   </div>
 
@@ -270,7 +270,10 @@ microelectrode arrays using raw local field potential">
                     <!-- TODO: Replace with your institution and conference/journal info -->
                     <span class="author-block">New York University<br>NeurIPS 2025</span>
                     <!-- TODO: Remove this line if no equal contribution -->
-                    <span class="eql-cntrb"><small><br><sup>*</sup>Indicates Equal Contribution</small></span>
+                    <span class="eql-cntrb"><small><br>
+                    <sup>1</sup>Department of Computer Science, New York University<br>
+                    <sup>2</sup>Neuroscience Institute, Grossman School of Medicine, New York University
+                    </small></span>
                   </div>
 
                   <div class="column has-text-centered">
@@ -331,14 +334,11 @@ microelectrode arrays using raw local field potential">
 <section class="hero teaser">
   <div class="container is-max-desktop">
     <div class="hero-body">
-      <!-- TODO: Replace with your teaser video -->
-      <video poster="" id="tree" autoplay controls muted loop height="100%" preload="metadata">
-        <!-- TODO: Add your video file path here -->
-        <source src="static/videos/banner_video.mp4" type="video/mp4">
-      </video>
+      <!-- Teaser image instead of video -->
+      <img src="static/images/figure1.png" alt="Teaser image" style="width:100%; height:auto;" />
       <!-- TODO: Replace with your video description -->
       <h2 class="subtitle has-text-centered">
-        Aliquam vitae elit ullamcorper tellus egestas pellentesque. Ut lacus tellus, maximus vel lectus at, placerat pretium mi. Maecenas dignissim tincidunt vestibulum. Sed consequat hendrerit nisl ut maximus. 
+        Our framework uses self-supervised learning on raw LFP to perform in vivo localization and disease classification across multiple species and probe types.
       </h2>
     </div>
   </div>
@@ -378,109 +378,26 @@ a foundation to learn representations that can be tuned for diverse neural decod
   </div>
 </section>
 <!-- End paper abstract -->
-
-
-<!-- Image carousel -->
-<section class="hero is-small">
-  <div class="hero-body">
-    <div class="container">
-      <div id="results-carousel" class="carousel results-carousel">
-       <div class="item">
-        <!-- TODO: Replace with your research result images -->
-        <img src="static/images/carousel1.jpg" alt="First research result visualization" loading="lazy"/>
-        <!-- TODO: Replace with description of this result -->
-        <h2 class="subtitle has-text-centered">
-          First image description.
-        </h2>
-      </div>
-      <div class="item">
-        <!-- Your image here -->
-        <img src="static/images/carousel2.jpg" alt="Second research result visualization" loading="lazy"/>
-        <h2 class="subtitle has-text-centered">
-          Second image description.
-        </h2>
-      </div>
-      <div class="item">
-        <!-- Your image here -->
-        <img src="static/images/carousel3.jpg" alt="Third research result visualization" loading="lazy"/>
-        <h2 class="subtitle has-text-centered">
-         Third image description.
-       </h2>
-     </div>
-     <div class="item">
-      <!-- Your image here -->
-      <img src="static/images/carousel4.jpg" alt="Fourth research result visualization" loading="lazy"/>
-      <h2 class="subtitle has-text-centered">
-        Fourth image description.
-      </h2>
-    </div>
-  </div>
-</div>
-</div>
-</section>
-<!-- End image carousel -->
-
-
-
-
-<!-- Youtube video -->
-<section class="hero is-small is-light">
-  <div class="hero-body">
-    <div class="container">
-      <!-- Paper video. -->
-      <h2 class="title is-3">Video Presentation</h2>
-      <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
-          
-          <div class="publication-video">
-            <!-- TODO: Replace with your YouTube video ID -->
-            <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
+<!-- Methodology section -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Methodology</h2>
+        <div class="content has-text-justified">
+          <img src="static/images/figure2.png" alt="Figure 2: Model Overview" style="width:100%; max-width:600px; margin-bottom:1em;" />
+          <ul style="text-align:left;">
+            <li><strong>Raw LFP Input Processing:</strong> Unlike traditional methods that require manual feature engineering, our model takes raw Local Field Potential (LFP) signals directly from various high-density probes, including SiNAPs and Neuropixels.</li>
+            <li><strong>Transformer-Based Pretraining:</strong> We utilize a Transformer-Encoder architecture (shown in Figure 1b) to learn robust temporal and spatial representations from unlabeled neural data through a self-supervised pretext task.</li>
+            <li><strong>Contrastive Learning ($\mathcal{L}_c$):</strong> The model employs a contrastive loss function to align neural representations across different recording sessions, ensuring the learned features are invariant to experimental noise.</li>
+            <li><strong>Multi-Domain Latent Space:</strong> The pretraining phase maps neural activity into a "Rodent" or "Macaque" representation space (shown in Figure 1c), where distinct brain regions like the Cortex, CA1, and DG naturally cluster together.</li>
+            <li><strong>Downstream Task Fine-Tuning:</strong> A lightweight decoder is added to the pretrained backbone to perform specific tasks such as In Vivo Region Localization and Disease Classification (Healthy vs. Diseased) with minimal labeled data.</li>
+          </ul>
         </div>
       </div>
     </div>
   </div>
 </section>
-<!-- End youtube video -->
-
-
-<!-- Video carousel -->
-<section class="hero is-small">
-  <div class="hero-body">
-    <div class="container">
-      <h2 class="title is-3">Another Carousel</h2>
-      <div id="results-carousel" class="carousel results-carousel">
-        <div class="item item-video1">
-          <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video1" controls muted loop height="100%" preload="metadata">
-            <!-- Your video file here -->
-            <source src="static/videos/carousel1.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-video2">
-          <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video2" controls muted loop height="100%" preload="metadata">
-            <!-- Your video file here -->
-            <source src="static/videos/carousel2.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-video3">
-          <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video3" controls muted loop height="100%" preload="metadata">
-            <!-- Your video file here -->
-            <source src="static/videos/carousel3.mp4" type="video/mp4">
-          </video>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- End video carousel -->
-
-
-
-
-
 
 <!-- Paper poster -->
 <section class="hero is-small is-light">
