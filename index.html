@@ -335,7 +335,7 @@ microelectrode arrays using raw local field potential">
   <div class="container is-max-desktop">
     <div class="hero-body">
       <!-- Teaser image instead of video -->
-      <img src="static/images/figure1.png" alt="Teaser image" style="width:100%; height:auto;" />
+      <img src="static/images/figure1_old.png" alt="Teaser image" style="width:100%; height:auto;" />
       <!-- TODO: Replace with your video description -->
       <h2 class="subtitle has-text-centered">
         Our framework uses self-supervised learning on raw LFP to perform in vivo localization and disease classification across multiple species and probe types.
@@ -385,7 +385,9 @@ a foundation to learn representations that can be tuned for diverse neural decod
       <div class="column is-four-fifths">
         <h2 class="title is-3">Methodology</h2>
         <div class="content has-text-justified">
-          <img src="static/images/figure2.png" alt="Figure 2: Model Overview" style="width:100%; max-width:600px; margin-bottom:1em;" />
+          <div class="has-text-centered">
+            <img src="static/images/figure1.png" alt="Figure 1: Model Overview" style="max-width:600px; width:100%; margin-bottom:1em; display:inline-block;" />
+          </div>
           <ul style="text-align:left;">
             <li><strong>Raw LFP Input Processing:</strong> Unlike traditional methods that require manual feature engineering, our model takes raw Local Field Potential (LFP) signals directly from various high-density probes, including SiNAPs and Neuropixels.</li>
             <li><strong>Transformer-Based Pretraining:</strong> We utilize a Transformer-Encoder architecture (shown in Figure 1b) to learn robust temporal and spatial representations from unlabeled neural data through a self-supervised pretext task.</li>
