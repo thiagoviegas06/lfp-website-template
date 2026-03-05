@@ -36,6 +36,14 @@ type IblPidIndexResponse = {
   pidsBySession?: Record<string, string[]>;
 };
 
+type ProbeVisuals = {
+  pid: string;
+  waveform: number[][];
+  lfpPower: number[][];
+  muaPower: number[][];
+  csd: number[][] | null;
+};
+
 type Datasets = Record<DatasetKey, DatasetDef>;
 
 type DropdownProps = {
@@ -106,14 +114,8 @@ const REGION_COLORS = [
 
 const DATASETS: Datasets = {
   Allen: {
-    sessions: [
-      "session_715093703",
-      "session_719161530",
-      "session_721123822",
-      "session_732592105",
-      "session_737581020",
-    ],
-    probes: ["probeA", "probeB", "probeC", "probeD", "probeE", "probeF"],
+    sessions: ["(loading sessions...)"],
+    probes: ["(loading probes...)"],
   },
   IBL: {
     sessions: ["(loading eids...)"],
@@ -298,23 +300,43 @@ function HeatmapCanvas({
     const t = Math.max(0, Math.min(1, v));
 
     if (colormap === "viridis") {
-      const r = Math.round(68 + t * (253 - 68));
-      const g = Math.round(1 + t * (231 - 1));
-      const b = Math.round(84 + t * (37 - 84));
+      // 5-stop viridis: dark purple → teal → green → yellow
+      const stops: [number, number, number][] = [
+        [68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37],
+      ];
+      const seg = t * (stops.length - 1);
+      const i = Math.min(Math.floor(seg), stops.length - 2);
+      const f = seg - i;
+      const r = Math.round(stops[i][0] + f * (stops[i + 1][0] - stops[i][0]));
+      const g = Math.round(stops[i][1] + f * (stops[i + 1][1] - stops[i][1]));
+      const b = Math.round(stops[i][2] + f * (stops[i + 1][2] - stops[i][2]));
       return `rgb(${r},${g},${b})`;
     }
 
     if (colormap === "inferno") {
-      const r = Math.round(0 + t * 252);
-      const g = Math.round(0 + t * 255 * (t > 0.5 ? 1 : 0.3));
-      const b = Math.round(4 + (1 - t) * 150);
+      // 5-stop inferno: black → purple → red → orange → yellow
+      const stops: [number, number, number][] = [
+        [0, 0, 4], [87, 16, 110], [188, 55, 84], [249, 142, 9], [252, 255, 164],
+      ];
+      const seg = t * (stops.length - 1);
+      const i = Math.min(Math.floor(seg), stops.length - 2);
+      const f = seg - i;
+      const r = Math.round(stops[i][0] + f * (stops[i + 1][0] - stops[i][0]));
+      const g = Math.round(stops[i][1] + f * (stops[i + 1][1] - stops[i][1]));
+      const b = Math.round(stops[i][2] + f * (stops[i + 1][2] - stops[i][2]));
       return `rgb(${r},${g},${b})`;
     }
 
-    // coolwarm-ish fallback
-    const r = Math.round(t * 255);
-    const g = Math.round((1 - Math.abs(t - 0.5) * 2) * 200);
-    const b = Math.round((1 - t) * 255);
+    // coolwarm: blue → white → red
+    const stops: [number, number, number][] = [
+      [59, 76, 192], [141, 176, 254], [245, 245, 245], [246, 153, 117], [180, 4, 38],
+    ];
+    const seg = t * (stops.length - 1);
+    const i = Math.min(Math.floor(seg), stops.length - 2);
+    const f = seg - i;
+    const r = Math.round(stops[i][0] + f * (stops[i + 1][0] - stops[i][0]));
+    const g = Math.round(stops[i][1] + f * (stops[i + 1][1] - stops[i][1]));
+    const b = Math.round(stops[i][2] + f * (stops[i + 1][2] - stops[i][2]));
     return `rgb(${r},${g},${b})`;
   },
   [colormap]
@@ -353,6 +375,40 @@ function HeatmapCanvas({
   return (
     <div ref={wrapRef}>
       <canvas ref={canvasRef} style={{ width: "100%", height }} />
+    </div>
+  );
+}
+
+function ColorbarLegend({
+  colormap = "viridis",
+  lowLabel = "Low",
+  highLabel = "High",
+}: {
+  colormap?: "viridis" | "inferno" | "coolwarm";
+  lowLabel?: string;
+  highLabel?: string;
+}) {
+  const gradientMap: Record<string, string> = {
+    viridis:
+      "linear-gradient(to right, rgb(68,1,84), rgb(59,82,139), rgb(33,145,140), rgb(94,201,98), rgb(253,231,37))",
+    inferno:
+      "linear-gradient(to right, rgb(0,0,4), rgb(87,16,110), rgb(188,55,84), rgb(249,142,9), rgb(252,255,164))",
+    coolwarm:
+      "linear-gradient(to right, rgb(59,76,192), rgb(141,176,254), rgb(245,245,245), rgb(246,153,117), rgb(180,4,38))",
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+      <span className="is-size-7 has-text-grey">{lowLabel}</span>
+      <div
+        style={{
+          flex: 1,
+          height: 10,
+          borderRadius: 3,
+          background: gradientMap[colormap] ?? gradientMap.viridis,
+        }}
+      />
+      <span className="is-size-7 has-text-grey">{highLabel}</span>
     </div>
   );
 }
@@ -555,6 +611,60 @@ function Panel({ title, subtitle, children }: PanelProps) {
   );
 }
 
+/** ---------- Heatmap with Interactive Slider ---------- */
+function HeatmapSliderCard({
+  title,
+  subtitle,
+  data,
+  colormap = "viridis",
+  height = 280,
+}: {
+  title: string;
+  subtitle?: string;
+  data: Heatmap;
+  colormap?: "viridis" | "inferno" | "coolwarm";
+  height?: number;
+}) {
+  return (
+    <div className="card">
+      <header className="card-header">
+        <p className="card-header-title is-size-7">
+          {title}
+          {subtitle ? <span className="ml-2 has-text-grey">— {subtitle}</span> : null}
+        </p>
+      </header>
+      <div className="card-content">
+        <div className="content">
+          <div style={{ display: "flex", gap: 4 }}>
+            {/* Y-axis label */}
+            <div style={{ display: "flex", alignItems: "center", width: 18 }}>
+              <span
+                className="is-size-7 has-text-grey"
+                style={{
+                  writingMode: "vertical-rl",
+                  transform: "rotate(180deg)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Channel (depth)
+              </span>
+            </div>
+            {/* Heatmap */}
+            <div style={{ flex: 1 }}>
+              <HeatmapCanvas data={data} height={height} colormap={colormap} />
+              {/* X-axis label */}
+              <p className="is-size-7 has-text-grey has-text-centered" style={{ marginTop: 2 }}>
+                Time
+              </p>
+            </div>
+          </div>
+          <ColorbarLegend colormap={colormap} lowLabel="Low" highLabel="High" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** ---------- IBL helpers ---------- */
 function colorForRegion(name: string, palette: readonly string[]) {
   let h = 0;
@@ -587,8 +697,18 @@ export default function Lfp2VecDemo() {
   const [iblRegions, setIblRegions] = useState<string[]>([...REGIONS_BY_DATASET.IBL]);
   const [iblDownsampled, setIblDownsampled] = useState<IblTrackPoint[]>([]);
 
+  // Allen probe options come from /api/allen/pids.
+  const [allenPidOptions, setAllenPidOptions] = useState<string[]>([]);
+  const [allenSessionOptions, setAllenSessionOptions] = useState<string[]>([]);
+  const [allenPidsBySession, setAllenPidsBySession] = useState<Record<string, string[]>>({});
+  const [allenRegions, setAllenRegions] = useState<string[]>([...REGIONS_BY_DATASET.Allen]);
+  const [allenDownsampled, setAllenDownsampled] = useState<IblTrackPoint[]>([]);
+
+  // Real probe visual data (waveform, heatmaps) for Allen probes.
+  const [probeVisuals, setProbeVisuals] = useState<ProbeVisuals | null>(null);
+
   useEffect(() => {
-    if (dataset === "IBL") {
+    if (dataset === "IBL" || dataset === "Allen") {
       setSession("");
       setProbe("");
       return;
@@ -597,9 +717,9 @@ export default function Lfp2VecDemo() {
     setProbe(DATASETS[dataset].probes[0]);
   }, [dataset]);
 
-  // Non-IBL keeps the original synthetic loading delay behavior.
+  // Neuronexus keeps the original synthetic loading delay behavior.
   useEffect(() => {
-    if (dataset === "IBL") return;
+    if (dataset === "IBL" || dataset === "Allen") return;
     setLoaded(false);
     const t = window.setTimeout(() => setLoaded(true), 250);
     return () => window.clearTimeout(t);
@@ -612,11 +732,16 @@ export default function Lfp2VecDemo() {
     return Math.abs(h);
   }, [dataset, session, probe]);
 
-  /** ---------- Synthetic signals always (Option A) ---------- */
-  const waveforms = useMemo(() => generateWaveform(seed, nChannels, 200), [seed]);
-  const lfpPower = useMemo(() => generateHeatmap(seed + 1, nChannels, 40), [seed]);
-  const muaPower = useMemo(() => generateHeatmap(seed + 2, nChannels, 40), [seed]);
-  const csdProfile = useMemo(() => generateHeatmap(seed + 3, nChannels, 40), [seed]);
+  /** ---------- Signals: real for Allen (when available), synthetic otherwise ---------- */
+  const syntheticWaveforms = useMemo(() => generateWaveform(seed, nChannels, 200), [seed]);
+  const syntheticLfp = useMemo(() => generateHeatmap(seed + 1, nChannels, 40), [seed]);
+  const syntheticMua = useMemo(() => generateHeatmap(seed + 2, nChannels, 40), [seed]);
+  const syntheticCsd = useMemo(() => generateHeatmap(seed + 3, nChannels, 40), [seed]);
+
+  const waveforms = probeVisuals?.waveform ?? syntheticWaveforms;
+  const lfpPower = probeVisuals?.lfpPower ?? syntheticLfp;
+  const muaPower = probeVisuals?.muaPower ?? syntheticMua;
+  const csdProfile = probeVisuals?.csd ?? syntheticCsd;
 
   /**
    * Region probabilities:
@@ -670,6 +795,57 @@ export default function Lfp2VecDemo() {
     };
   }, [dataset]);
 
+  // For Allen: load pid list from server-side cached CSV index.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAllenPids() {
+      if (dataset !== "Allen") return;
+      setLoaded(false);
+
+      try {
+        const res = await fetch("/api/allen/pids");
+        if (!res.ok) throw new Error(`Failed to fetch Allen pids (${res.status})`);
+
+        const data = (await res.json()) as IblPidIndexResponse;
+        const pids = Array.isArray(data.pids) ? data.pids : [];
+        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+        const bySession = data.pidsBySession ?? {};
+
+        if (!cancelled) {
+          setAllenSessionOptions(sessions);
+          setAllenPidsBySession(bySession);
+          setSession((prev) => (sessions.includes(prev) ? prev : (sessions[0] ?? "")));
+          if (pids.length === 0 || sessions.length === 0) setLoaded(true);
+        }
+      } catch (error) {
+        console.error("Failed to load Allen pids", error);
+        if (!cancelled) {
+          setAllenSessionOptions([]);
+          setAllenPidsBySession({});
+          setAllenPidOptions([]);
+          setSession("");
+          setProbe("");
+          setLoaded(true);
+        }
+      }
+    }
+
+    loadAllenPids().catch((e) => console.error(e));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dataset]);
+
+  // Keep Allen pid options synchronized to selected session.
+  useEffect(() => {
+    if (dataset !== "Allen") return;
+    const pids = allenPidsBySession[session] ?? [];
+    setAllenPidOptions(pids);
+    setProbe((prev) => (pids.includes(prev) ? prev : (pids[0] ?? "")));
+  }, [dataset, session, allenPidsBySession]);
+
   // Keep IBL pid options synchronized to selected eid session.
   useEffect(() => {
     if (dataset !== "IBL") return;
@@ -678,16 +854,17 @@ export default function Lfp2VecDemo() {
     setProbe((prev) => (pids.includes(prev) ? prev : (pids[0] ?? "")));
   }, [dataset, session, iblPidsBySession]);
 
-  // Non-IBL region probabilities remain synthetic.
+  // Neuronexus region probabilities remain synthetic.
   useEffect(() => {
     let cancelled = false;
 
     function computeSyntheticRegions() {
-      if (dataset === "IBL") return;
+      if (dataset === "IBL" || dataset === "Allen") return;
       const probs = generateRegionProbs(seed + 4, nChannels, BRAIN_REGIONS);
       if (!cancelled) {
         setRegionProbs(probs);
         setIblDownsampled([]);
+        setAllenDownsampled([]);
       }
     }
 
@@ -750,6 +927,88 @@ export default function Lfp2VecDemo() {
     };
   }, [dataset, session, probe, nChannels, iblPidOptions, iblSessionOptions]);
 
+  // Allen region probabilities come from server-side downsampled track acronyms.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAllenTrack() {
+      if (dataset !== "Allen") return;
+      if (!allenSessionOptions.includes(session)) return;
+      if (allenPidOptions.length === 0) return;
+      if (!allenPidOptions.includes(probe)) return;
+      if (!session) return;
+      if (!probe) return;
+
+      setLoaded(false);
+
+      try {
+        const res = await fetch(
+          `/api/allen/track?eid=${encodeURIComponent(session)}&pid=${encodeURIComponent(probe)}&n=${nChannels}`
+        );
+        if (!res.ok) throw new Error(`Failed to fetch Allen track (${res.status})`);
+
+        const data = (await res.json()) as IblTrackResponse;
+        const regions = data.uniqueAcronyms.length ? data.uniqueAcronyms : [...REGIONS_BY_DATASET.Allen];
+        const probs = oneHotRegionProbs(data.acronyms, regions);
+
+        if (!cancelled) {
+          setAllenRegions(regions);
+          setRegionProbs(probs);
+          setAllenDownsampled(Array.isArray(data.downsampled) ? data.downsampled : []);
+          setLoaded(true);
+        }
+      } catch (error) {
+        console.error("Failed to load Allen track", error);
+        if (!cancelled) {
+          const fallbackRegions = [...REGIONS_BY_DATASET.Allen];
+          setAllenRegions(fallbackRegions);
+          setRegionProbs(
+            Array.from({ length: nChannels }, () =>
+              Array(fallbackRegions.length).fill(1 / fallbackRegions.length)
+            )
+          );
+          setAllenDownsampled([]);
+          setLoaded(true);
+        }
+      }
+    }
+
+    loadAllenTrack().catch((e) => console.error(e));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dataset, session, probe, nChannels, allenPidOptions, allenSessionOptions]);
+
+  // Fetch real probe visuals (waveform, heatmaps) for Allen probes.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProbeVisuals() {
+      if (dataset !== "Allen") {
+        setProbeVisuals(null);
+        return;
+      }
+      if (!probe) return;
+
+      try {
+        const res = await fetch(`/data/allen/${probe}.json`);
+        if (!res.ok) {
+          // No real data for this probe, fall back to synthetic
+          if (!cancelled) setProbeVisuals(null);
+          return;
+        }
+        const data = (await res.json()) as ProbeVisuals;
+        if (!cancelled) setProbeVisuals(data);
+      } catch {
+        if (!cancelled) setProbeVisuals(null);
+      }
+    }
+
+    loadProbeVisuals().catch(() => {});
+    return () => { cancelled = true; };
+  }, [dataset, probe]);
+
   /** ---------- Colors from regionProbs (works for synthetic + one-hot) ---------- */
   const estimatedColors = useMemo(() => {
     // For IBL, color directly from downsampled server track labels.
@@ -757,7 +1016,12 @@ export default function Lfp2VecDemo() {
       return iblDownsampled.map((pt) => colorForRegion(pt.acronym || "UNK", REGION_COLORS));
     }
 
-    // Original Allen/Neuronexus colors
+    // For Allen, color directly from downsampled server track labels.
+    if (dataset === "Allen" && allenDownsampled.length > 0) {
+      return allenDownsampled.map((pt) => colorForRegion(pt.acronym || "UNK", REGION_COLORS));
+    }
+
+    // Neuronexus colors from synthetic regionProbs
     return regionProbs.map((p) => {
       let maxIdx = 0;
       let maxVal = -Infinity;
@@ -769,7 +1033,7 @@ export default function Lfp2VecDemo() {
       }
       return REGION_COLORS[maxIdx % REGION_COLORS.length];
     });
-  }, [dataset, regionProbs, iblDownsampled]);
+  }, [dataset, regionProbs, iblDownsampled, allenDownsampled]);
 
   /** ---------- Probe line stays synthetic (Option A) ---------- */
   const rng = useMemo(() => seededRandom(seed), [seed]);
@@ -803,11 +1067,17 @@ export default function Lfp2VecDemo() {
     return [...s].sort((a, b) => a - b);
   }, [regionProbs]);
 
-  const regionNamesForTags = dataset === "IBL" ? iblRegions : BRAIN_REGIONS;
+  const regionNamesForTags = dataset === "IBL" ? iblRegions : dataset === "Allen" ? allenRegions : BRAIN_REGIONS;
 
   /** ---------- Probe options ---------- */
-  const probeOptions = dataset === "IBL" ? (iblPidOptions.length ? iblPidOptions : DATASETS.IBL.probes) : DATASETS[dataset].probes;
-  const sessionOptions = dataset === "IBL" ? (iblSessionOptions.length ? iblSessionOptions : DATASETS.IBL.sessions) : DATASETS[dataset].sessions;
+  const probeOptions =
+    dataset === "IBL" ? (iblPidOptions.length ? iblPidOptions : DATASETS.IBL.probes) :
+    dataset === "Allen" ? (allenPidOptions.length ? allenPidOptions : DATASETS.Allen.probes) :
+    DATASETS[dataset].probes;
+  const sessionOptions =
+    dataset === "IBL" ? (iblSessionOptions.length ? iblSessionOptions : DATASETS.IBL.sessions) :
+    dataset === "Allen" ? (allenSessionOptions.length ? allenSessionOptions : DATASETS.Allen.sessions) :
+    DATASETS[dataset].sessions;
 
   return (
     <div id="lfp2vec-demo">
@@ -816,6 +1086,8 @@ export default function Lfp2VecDemo() {
         <p className="has-text-grey">
           {dataset === "IBL"
             ? "IBL region labels loaded from CSV; signals are synthetic/seeded for visualization."
+            : dataset === "Allen"
+            ? "Allen Brain Observatory region labels loaded from API; signals are synthetic/seeded for visualization."
             : "Synthetic visualization (seeded) to illustrate the signals and predicted region decoding structure."}
         </p>
       </div>
@@ -836,7 +1108,7 @@ export default function Lfp2VecDemo() {
           </div>
 
           <div className="column is-narrow">
-            <Dropdown label={dataset === "IBL" ? "Insertion (pid)" : "Probe"} value={probe} options={probeOptions} onChange={setProbe} />
+            <Dropdown label={dataset === "IBL" ? "Insertion (pid)" : dataset === "Allen" ? "Probe (pid)" : "Probe"} value={probe} options={probeOptions} onChange={setProbe} />
           </div>
 
           <div className="column">
@@ -856,64 +1128,78 @@ export default function Lfp2VecDemo() {
         </div>
       </div>
 
-      {/* Row 1 */}
+      {/* Row 1: Ground Truth - Top Section */}
       <div className="content">
         <h3 className="title is-5">Ground Truth</h3>
       </div>
 
       <div className="columns is-multiline">
-        <div className="column is-3">
+        <div className="column is-4">
           <Panel title="Insertion Path" subtitle="Atlas-registered">
             <BrainSection probeLine={probeLineGT} isEstimated={false} />
           </Panel>
         </div>
 
-        <div className="column is-5">
+        <div className="column is-8">
           <Panel title="Raw LFP Signal" subtitle={`${nChannels}ch × 500ms`}>
-            <WaveformCanvas channels={waveforms} height={220} />
-          </Panel>
-        </div>
-
-        <div className="column is-2">
-          <Panel title="LFP Power" subtitle="1–300 Hz">
-            <HeatmapCanvas data={lfpPower} height={220} colormap="viridis" />
-          </Panel>
-        </div>
-
-        <div className="column is-2">
-          <Panel title="MUA Power" subtitle="300–6000 Hz">
-            <HeatmapCanvas data={muaPower} height={220} colormap="inferno" />
+            <WaveformCanvas channels={waveforms} height={240} />
           </Panel>
         </div>
       </div>
 
-      {/* Row 2 */}
-      <div className="content mt-5">
+      {/* Row 1: Ground Truth - Heatmap Section (Full Width, Side-by-Side) */}
+      <div className="columns is-multiline">
+        <div className="column is-6">
+          <HeatmapSliderCard
+            title="LFP Power"
+            subtitle="1–300 Hz"
+            data={lfpPower}
+            colormap="viridis"
+            height={280}
+          />
+        </div>
+
+        <div className="column is-6">
+          <HeatmapSliderCard
+            title="MUA Power"
+            subtitle="300–6000 Hz"
+            data={muaPower}
+            colormap="inferno"
+            height={280}
+          />
+        </div>
+      </div>
+
+      {/* Row 2: Model Predictions - Top Section */}
+      <div className="content mt-6">
         <h3 className="title is-5">Model Predictions</h3>
       </div>
 
       <div className="columns is-multiline">
-        <div className="column is-3">
+        <div className="column is-4">
           <Panel title="Estimated Regions" subtitle="Predicted path">
             <BrainSection probeLine={probeLineEst} isEstimated={true} regionColors={estimatedColors} />
           </Panel>
         </div>
 
-        <div className="column is-3">
+        <div className="column is-4">
           <Panel title="CSD Profile" subtitle="Current Source Density">
-            <HeatmapCanvas data={csdProfile} height={220} colormap="coolwarm" />
+            <HeatmapCanvas data={csdProfile} height={240} colormap="coolwarm" />
           </Panel>
         </div>
 
-        <div className="column is-5">
-          <Panel title="Region Probability" subtitle="Per-channel posterior">
-            <RegionProbChart probs={regionProbs} height={220} />
-          </Panel>
-        </div>
-
-        <div className="column is-1">
+        <div className="column is-4">
           <Panel title="Labels" subtitle="argmax">
-            <RegionLabelStrip probs={regionProbs} height={220} />
+            <RegionLabelStrip probs={regionProbs} height={240} />
+          </Panel>
+        </div>
+      </div>
+
+      {/* Row 2: Model Predictions - Region Probability (Full Width) */}
+      <div className="columns is-multiline">
+        <div className="column is-12">
+          <Panel title="Region Probability" subtitle="Per-channel posterior">
+            <RegionProbChart probs={regionProbs} height={300} />
           </Panel>
         </div>
       </div>
@@ -923,8 +1209,8 @@ export default function Lfp2VecDemo() {
           <h4 className="title is-6">Method (high-level)</h4>
           <p>
             LFP2Vec adapts an audio-pretrained wav2vec 2.0 transformer via continued self-supervised learning on
-            unlabeled LFP data, then fine-tunes for anatomical region decoding. This demo uses real IBL region labels
-            when available and synthetic/seeded signals for illustration.
+            unlabeled LFP data, then fine-tunes for anatomical region decoding. This demo uses real region labels
+            from Allen Brain Observatory and IBL when available, and synthetic/seeded signals for illustration.
           </p>
         </div>
       </div>
