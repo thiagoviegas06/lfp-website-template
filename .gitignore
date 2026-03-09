@@ -56,10 +56,6 @@ __pycache__/
 *.pyo
 *.egg-info/
 
-# Generated probe data and visualizations
-/public/probe_visualizations/
-/public/data/allen/*.json
-
 # IDE settings
 .vscode/
 .idea/
