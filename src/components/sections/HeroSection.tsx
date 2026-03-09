@@ -3,7 +3,7 @@ import type { HeroSection as HeroSectionType } from "@/types/sections";
 export default function HeroSection({ data }: { data: HeroSectionType }) {
   return (
     <section className="hero">
-      <div className="hero-body">
+      <div className="hero-body pb-3">
         <div className="container is-max-desktop">
           <div className="columns is-centered">
             <div className="column has-text-centered">

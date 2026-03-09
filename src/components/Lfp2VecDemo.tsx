@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// import OrthogonalBrainView from "./OrthogonalBrainView";  // Disabled: Using 3D BrainView only
 
 /** ---------- Types ---------- */
 type DatasetKey = "Allen" | "IBL" | "Neuronexus";
 
-type ProbePoint = { x: number; y: number };
 type Heatmap = number[][];
 type Waveform = number[][];
 type RegionProbs = number[][];
@@ -124,12 +124,12 @@ const REGION_COLORS = [
 
 const DATASETS: Datasets = {
   Allen: {
-    sessions: ["(loading sessions...)"],
-    probes: ["(loading probes...)"],
+    sessions: [],
+    probes: [],
   },
   IBL: {
-    sessions: ["(loading eids...)"],
-    probes: ["(loading pids...)"],
+    sessions: [],
+    probes: [],
   },
   Neuronexus: {
     sessions: ["subject1_day1", "subject1_day3", "subject2_day1", "subject3_day2"],
@@ -423,78 +423,6 @@ function ColorbarLegend({
   );
 }
 
-function BrainSection({
-  probeLine,
-  regionColors,
-  width = 220,
-  height = 220,
-  isEstimated = false,
-}: {
-  probeLine?: [ProbePoint, ProbePoint];
-  regionColors?: string[];
-  width?: number;
-  height?: number;
-  isEstimated?: boolean;
-}) {
-  const probeStart = probeLine?.[0] ?? { x: 0.6, y: 0.1 };
-  const probeEnd = probeLine?.[1] ?? { x: 0.4, y: 0.9 };
-
-  return (
-    <svg viewBox="0 0 220 220" width="100%" height={height}>
-      <ellipse cx="110" cy="115" rx="95" ry="85" fill="none" stroke="#363636" strokeWidth="1.5" />
-      <path d="M50,80 Q70,60 90,75 Q110,55 130,70 Q150,55 170,80" fill="none" stroke="#363636" strokeWidth="1" />
-      <ellipse cx="110" cy="100" rx="50" ry="18" fill="none" stroke="#363636" strokeWidth="1" />
-      <path d="M80,130 Q95,145 115,140 Q130,135 140,130" fill="none" stroke="#363636" strokeWidth="1" />
-      <ellipse cx="100" cy="120" rx="18" ry="14" fill="none" stroke="#363636" strokeWidth="0.8" />
-      <ellipse cx="120" cy="120" rx="18" ry="14" fill="none" stroke="#363636" strokeWidth="0.8" />
-      <path d="M95,105 Q100,115 105,105" fill="none" stroke="#363636" strokeWidth="0.6" />
-      <path d="M115,105 Q120,115 125,105" fill="none" stroke="#363636" strokeWidth="0.6" />
-      <line x1="110" y1="30" x2="110" y2="200" stroke="#7a7a7a" strokeWidth="0.5" strokeDasharray="3,3" />
-
-      {isEstimated && regionColors && regionColors.length > 0 ? (
-        <>
-          {regionColors.map((c, i) => {
-            const n = regionColors.length;
-            const x1 = probeStart.x * 220 + ((probeEnd.x * 220 - probeStart.x * 220) * i) / n;
-            const y1 = probeStart.y * 220 + ((probeEnd.y * 220 - probeStart.y * 220) * i) / n;
-            const x2 = probeStart.x * 220 + ((probeEnd.x * 220 - probeStart.x * 220) * (i + 1)) / n;
-            const y2 = probeStart.y * 220 + ((probeEnd.y * 220 - probeStart.y * 220) * (i + 1)) / n;
-            return (
-              <line
-                key={i}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke={c}
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            );
-          })}
-        </>
-      ) : (
-        <line
-          x1={probeStart.x * 220}
-          y1={probeStart.y * 220}
-          x2={probeEnd.x * 220}
-          y2={probeEnd.y * 220}
-          stroke="#cc0f35" // Bulma danger-ish
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      )}
-
-      <circle
-        cx={probeEnd.x * 220}
-        cy={probeEnd.y * 220}
-        r="3"
-        fill={isEstimated && regionColors?.length ? regionColors[regionColors.length - 1] : "#cc0f35"}
-      />
-    </svg>
-  );
-}
-
 function RegionProbChart({ probs, height }: { probs: RegionProbs; height: number }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { ref: wrapRef, size } = useElementSize<HTMLDivElement>();
@@ -716,6 +644,9 @@ export default function Lfp2VecDemo() {
 
   // Real probe visual data (waveform, heatmaps) for Allen probes.
   const [probeVisuals, setProbeVisuals] = useState<ProbeVisuals | null>(null);
+
+  // Probe brain visualization image (PNG from batch script)
+  const [probeVizImage, setProbeVizImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (dataset === "IBL" || dataset === "Allen") {
@@ -996,6 +927,45 @@ export default function Lfp2VecDemo() {
     return () => { cancelled = true; };
   }, [dataset, probe]);
 
+  // Load probe brain visualization PNG for Allen probes
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProbeVizImage() {
+      if (dataset !== "Allen") {
+        if (!cancelled) setProbeVizImage(null);
+        return;
+      }
+      if (!probe || !session) {
+        if (!cancelled) setProbeVizImage(null);
+        return;
+      }
+
+      // Try to find the visualization in the probe_visualizations folder
+      // The session in the path is the session ID (eid), not the probe session
+      const vizPath = `/probe_visualizations/session_${session}/${probe}.png`;
+
+      try {
+        // Try to fetch the image to check if it exists
+        const res = await fetch(vizPath);
+        if (res.ok) {
+          if (!cancelled) setProbeVizImage(vizPath);
+          return;
+        }
+      } catch {
+        // File doesn't exist
+      }
+
+      // No visualization found
+      if (!cancelled) setProbeVizImage(null);
+    }
+
+    loadProbeVizImage().catch(() => {
+      if (!cancelled) setProbeVizImage(null);
+    });
+    return () => { cancelled = true; };
+  }, [dataset, session, probe]);
+
   /** ---------- Colors from regionProbs (works for synthetic + one-hot) ---------- */
   const estimatedColors = useMemo(() => {
     // For IBL, color directly from downsampled server track labels.
@@ -1021,21 +991,6 @@ export default function Lfp2VecDemo() {
       return REGION_COLORS[maxIdx % REGION_COLORS.length];
     });
   }, [dataset, regionProbs, iblDownsampled, allenDownsampled]);
-
-  /** ---------- Probe line stays synthetic (Option A) ---------- */
-  const rng = useMemo(() => seededRandom(seed), [seed]);
-  const probeLineGT: [ProbePoint, ProbePoint] = useMemo(
-    () => [{ x: 0.55 + rng() * 0.1, y: 0.12 }, { x: 0.42 + rng() * 0.08, y: 0.88 }],
-    [rng]
-  );
-
-  const probeLineEst: [ProbePoint, ProbePoint] = useMemo(
-    () => [
-      { x: probeLineGT[0].x + 0.01, y: probeLineGT[0].y + 0.02 },
-      { x: probeLineGT[1].x - 0.01, y: probeLineGT[1].y - 0.01 },
-    ],
-    [probeLineGT]
-  );
 
   /** ---------- Active regions tags ---------- */
   const activeRegionIndices = useMemo(() => {
@@ -1115,78 +1070,78 @@ export default function Lfp2VecDemo() {
         </div>
       </div>
 
-      {/* Row 1: Ground Truth - Top Section */}
+      {/* Probe Brain Visualization */}
+      {probeVizImage && (
+        <div className="content">
+          <h3 className="title is-5">Probe Insertion Visualization</h3>
+        </div>
+      )}
+
+      {probeVizImage && (
+        <div className="box">
+          <figure className="image">
+            <img src={probeVizImage} alt={`Probe ${probe} brain visualization`} />
+          </figure>
+          <p className="is-size-7 has-text-grey mt-3">
+            Coronal (left), Sagittal (center), and Axial (right) views showing probe insertion through Allen Brain Atlas.
+          </p>
+        </div>
+      )}
+
+      {/* Compact Layout: Ground Truth and Predictions Side-by-Side */}
       <div className="content">
-        <h3 className="title is-5">Ground Truth</h3>
+        <h3 className="title is-5">Ground Truth & Predictions</h3>
       </div>
 
-      <div className="columns is-multiline">
-        <div className="column is-4">
-          <Panel title="Insertion Path" subtitle="Atlas-registered">
-            <BrainSection probeLine={probeLineGT} isEstimated={false} />
-          </Panel>
-        </div>
-
-        <div className="column is-8">
-          <Panel title="Raw LFP Signal" subtitle={`${nChannels}ch × 500ms`}>
-            <WaveformCanvas channels={waveforms} height={240} />
-          </Panel>
-        </div>
-      </div>
-
-      {/* Row 1: Ground Truth - Heatmap Section (Full Width, Side-by-Side) */}
+      {/* Raw Signal and Labels Side-by-Side */}
       <div className="columns is-multiline">
         <div className="column is-6">
+          <Panel title="Raw LFP Signal" subtitle={`${nChannels}ch × 500ms`}>
+            <WaveformCanvas channels={waveforms} height={160} />
+          </Panel>
+        </div>
+
+        <div className="column is-6">
+          <Panel title="Predicted Labels" subtitle="argmax region per channel">
+            <RegionLabelStrip probs={regionProbs} height={160} />
+          </Panel>
+        </div>
+      </div>
+
+      {/* Heatmaps: LFP, MUA, CSD Side-by-Side */}
+      <div className="columns is-multiline">
+        <div className="column is-4">
           <HeatmapSliderCard
             title="LFP Power"
             subtitle="1–300 Hz"
             data={lfpPower}
             colormap="viridis"
-            height={280}
+            height={180}
           />
         </div>
 
-        <div className="column is-6">
+        <div className="column is-4">
           <HeatmapSliderCard
             title="MUA Power"
             subtitle="300–6000 Hz"
             data={muaPower}
             colormap="inferno"
-            height={280}
+            height={180}
           />
-        </div>
-      </div>
-
-      {/* Row 2: Model Predictions - Top Section */}
-      <div className="content mt-6">
-        <h3 className="title is-5">Model Predictions</h3>
-      </div>
-
-      <div className="columns is-multiline">
-        <div className="column is-4">
-          <Panel title="Estimated Regions" subtitle="Predicted path">
-            <BrainSection probeLine={probeLineEst} isEstimated={true} regionColors={estimatedColors} />
-          </Panel>
         </div>
 
         <div className="column is-4">
           <Panel title="CSD Profile" subtitle="Current Source Density">
-            <HeatmapCanvas data={csdProfile} height={240} colormap="coolwarm" />
-          </Panel>
-        </div>
-
-        <div className="column is-4">
-          <Panel title="Labels" subtitle="argmax">
-            <RegionLabelStrip probs={regionProbs} height={240} />
+            <HeatmapCanvas data={csdProfile} height={180} colormap="coolwarm" />
           </Panel>
         </div>
       </div>
 
-      {/* Row 2: Model Predictions - Region Probability (Full Width) */}
+      {/* Region Probability (Full Width, Compact) */}
       <div className="columns is-multiline">
         <div className="column is-12">
           <Panel title="Region Probability" subtitle="Per-channel posterior">
-            <RegionProbChart probs={regionProbs} height={300} />
+            <RegionProbChart probs={regionProbs} height={200} />
           </Panel>
         </div>
       </div>

@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title:
     "Self supervised learning for in vivo localization of microelectrode arrays using raw local field potential",
-  description: "BRIEF_DESCRIPTION_OF_YOUR_RESEARCH_CONTRIBUTION_AND_FINDINGS",
+  description: "Lfp2Vec: A Foundation Model for Neural Signal Localization. This research presents a novel self-supervised learning framework that maps raw brain signals (LFP) to specific anatomical locations, automating a critical step in high-density electrode recording analysis.",
   keywords: [
     "LFP",
     "Self Supervised Learning",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: "New York University",
     title:
       "Self supervised learning for in vivo localization of microelectrode arrays using raw local field potential",
-    description: "BRIEF_DESCRIPTION_OF_YOUR_RESEARCH_CONTRIBUTION_AND_FINDINGS",
+    description: "Lfp2Vec: A Foundation Model for Neural Signal Localization. This research presents a novel self-supervised learning framework that maps raw brain signals (LFP) to specific anatomical locations, automating a critical step in high-density electrode recording analysis.",
     url: "https://YOUR_DOMAIN.com/YOUR_PROJECT_PAGE",
     images: [
       {
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     site: "@YOUR_TWITTER_HANDLE",
     creator: "@AUTHOR_TWITTER_HANDLE",
     title: "PAPER_TITLE",
-    description: "BRIEF_DESCRIPTION_OF_YOUR_RESEARCH_CONTRIBUTION_AND_FINDINGS",
+    description: "Lfp2Vec: A Foundation Model for Neural Signal Localization. This research presents a novel self-supervised learning framework that maps raw brain signals (LFP) to specific anatomical locations, automating a critical step in high-density electrode recording analysis.",
     images: ["https://YOUR_DOMAIN.com/images/social_preview.png"],
   },
   icons: {
@@ -94,7 +94,7 @@ export default function RootLayout({
               "@type": "ScholarlyArticle",
               headline:
                 "Self supervised learning for in vivo localization of microelectrode arrays using raw local field potential",
-              description: "BRIEF_DESCRIPTION_OF_YOUR_RESEARCH_CONTRIBUTION_AND_FINDINGS",
+              description: "Lfp2Vec: A Foundation Model for Neural Signal Localization. This research presents a novel self-supervised learning framework that maps raw brain signals (LFP) to specific anatomical locations, automating a critical step in high-density electrode recording analysis.",
               datePublished: "2025-09-18",
               publisher: {
                 "@type": "Organization",

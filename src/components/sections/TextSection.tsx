@@ -19,10 +19,15 @@ export default function TextSection({ data }: { data: TextSectionType }) {
                     style={{
                       maxWidth: data.image.maxWidth ?? 600,
                       width: "100%",
-                      marginBottom: "1em",
+                      marginBottom: "0.5em",
                       display: "inline-block",
                     }}
                   />
+                  {data.imageCaption ? (
+                    <p className="is-size-7 has-text-grey" style={{ marginBottom: "1em" }}>
+                      {data.imageCaption}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
 

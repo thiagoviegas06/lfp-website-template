@@ -49,5 +49,22 @@ next-env.d.ts
 session_data
 *.nwb
 
+# Python virtual environments and cache
+/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Generated probe data and visualizations
+/public/probe_visualizations/
+/public/data/allen/*.json
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # other local directories
 /website_lfp2vec/

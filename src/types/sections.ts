@@ -21,7 +21,8 @@ export type BaseSection = {
     | "pdf"
     | "bibtex"
     | "footer"
-    | "demo";
+    | "demo"
+    | "brain-view";
 };
 
 export type HeroSection = BaseSection & {
@@ -47,6 +48,7 @@ export type TextSection = BaseSection & {
   paragraphs?: string[];
   bullets?: string[];
   image?: { src: string; alt: string; maxWidth?: number };
+  imageCaption?: string;
 };
 
 export type CarouselSection = BaseSection & {
@@ -80,6 +82,13 @@ export type DemoSection = BaseSection & {
   description?: string;
 };
 
+export type BrainViewSection = BaseSection & {
+  kind: "brain-view";
+  title?: string;
+  dataSource?: "sample" | "api" | "both";
+  defaultDataSource?: "sample" | "api";
+};
+
 export type Section =
   | HeroSection
   | TeaserSection
@@ -88,4 +97,5 @@ export type Section =
   | PdfSection
   | BibtexSection
   | FooterSection
-  | DemoSection;
+  | DemoSection
+  | BrainViewSection;

@@ -1,29 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { CarouselSection as CarouselSectionType } from "@/types/sections";
 
-declare global {
-  interface Window {
-    bulmaCarousel?: {
-      attach: (selector: string, options: Record<string, unknown>) => unknown;
-    };
-  }
-}
-
 export default function CarouselSection({ data }: { data: CarouselSectionType }) {
-  useEffect(() => {
-    if (window.bulmaCarousel) {
-      window.bulmaCarousel.attach(`#carousel-${data.id}`, {
-        slidesToScroll: 1,
-        slidesToShow: 1,
-        loop: true,
-      });
-    }
-  }, [data.id]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? data.items.length - 1 : prev - 1));
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev === data.items.length - 1 ? 0 : prev + 1));
+  };
 
   const sectionClass =
     data.theme === "light" ? "section hero is-light" : "section";
+
+  const currentItem = data.items[currentIndex];
 
   return (
     <section className={sectionClass} id={data.id}>
@@ -32,30 +26,119 @@ export default function CarouselSection({ data }: { data: CarouselSectionType })
           <div className="column is-four-fifths">
             <h2 className="title is-3">{data.title}</h2>
 
-            <div className="content has-text-justified">
-              {data.bullets?.length ? (
-                <ul>
-                  {data.bullets.map((b, i) => (
-                    <li key={i}>{b}</li>
-                  ))}
-                </ul>
-              ) : null}
+            <div className="content">
+              {/* Carousel Card */}
+              <div
+                className="card"
+                style={{
+                  marginTop: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div className="card-content">
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "1rem",
+                    }}
+                  >
+                    {/* Image Container */}
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        maxHeight: "500px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <img
+                        src={currentItem.src}
+                        alt={currentItem.alt}
+                        loading="lazy"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "500px",
+                          objectFit: "contain",
+                        }}
+                      />
+                    </div>
 
-              <div id={`carousel-${data.id}`} className="carousel results-carousel">
-                {data.items.map((it, i) => (
-                  <div className="item" key={i}>
-                    <article className="results-carousel-card">
-                      <div className="results-carousel-media">
-                        <img src={it.src} alt={it.alt} loading="lazy" />
-                      </div>
-                      <p className="results-carousel-caption subtitle has-text-centered">
-                        {it.caption}
-                      </p>
-                    </article>
+                    {/* Caption */}
+                    <p className="is-size-6 has-text-justified">
+                      {currentItem.caption}
+                    </p>
+
+                    {/* Navigation Controls */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "1.5rem",
+                        marginTop: "1rem",
+                        width: "100%",
+                      }}
+                    >
+                      {/* Previous Button */}
+                      <button
+                        className="button is-light"
+                        onClick={goToPrevious}
+                        aria-label="Previous slide"
+                      >
+                        <span className="icon">
+                          <i className="fas fa-chevron-left"></i>
+                        </span>
+                      </button>
+
+                      {/* Slide Indicator */}
+                      <span className="is-size-7 has-text-grey">
+                        {currentIndex + 1} / {data.items.length}
+                      </span>
+
+                      {/* Next Button */}
+                      <button
+                        className="button is-light"
+                        onClick={goToNext}
+                        aria-label="Next slide"
+                      >
+                        <span className="icon">
+                          <i className="fas fa-chevron-right"></i>
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Dot Indicators */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {data.items.map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`button is-small ${
+                            idx === currentIndex ? "is-info" : "is-light"
+                          }`}
+                          onClick={() => setCurrentIndex(idx)}
+                          aria-label={`Go to slide ${idx + 1}`}
+                          style={{
+                            width: "12px",
+                            height: "12px",
+                            padding: 0,
+                            minWidth: "12px",
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                ))}
+                </div>
               </div>
-
             </div>
           </div>
         </div>

@@ -10,6 +10,12 @@ export const sections: Section[] = [
       { name: "Tianxiao He", href: "#", superscripts: "1,*" },
       { name: "Malhar Patel", href: "#", superscripts: "1,*" },
       { name: "Chenyi Li", href: "#", superscripts: "1" },
+      { name: "Anna Maslarova", href: "#", superscripts: "2" },
+      { name: "Mihaly Voroslakos", href: "#", superscripts: "2" },
+      { name: "Nalini Ramathan", href: "#", superscripts: "1" },
+      { name: "Wei Lun Hung", href: "#", superscripts: "1" },
+      { name: "Gyorgy Buszsaki", href: "#", superscripts: "2" },
+      { name: "Erdem Varol", href: "#", superscripts: "1,2" },
       // ... add the rest
     ],
     affiliations: [
@@ -46,50 +52,37 @@ export const sections: Section[] = [
   kind: "demo",
   title: "Interactive Demo",
   description:
-    "Seeded synthetic visualization showing the structure of signals and region-decoding outputs.",
+    "Visualization with real probe data. The predictions are currently synthetic",
 },
   {
   id: "methodology",
   kind: "text",
   title: "Methodology",
   theme: "light",
-  image: { src: "/images/figure1.png", alt: "Figure 1: Model Overview", maxWidth: 600 },
-  bullets: [
-    "Direct Raw LFP Modeling: The model operates directly on band-limited raw Local Field Potential (LFP) traces from high-density probes (e.g., Neuropixels), avoiding hand-engineered spectral or spike-based features.",
-    
-    "Spatiotemporal Tokenization: Continuous LFP signals are segmented into temporal windows and embedded into tokens that preserve both channel-wise spatial structure and temporal dynamics before being processed by the Transformer encoder.",
-    
-    "Self-Supervised Pretraining Objective: A Transformer-Encoder backbone is trained using a contrastive objective that encourages representations of related neural segments to be close in latent space while pushing apart unrelated segments.",
-    
-    "Cross-Session and Cross-Domain Alignment: The contrastive framework promotes invariance across recording sessions, animals, and probe types, enabling the model to learn domain-agnostic neural representations.",
-    
-    "Structured Latent Space Organization: After pretraining, embeddings cluster according to anatomical and functional regions (e.g., cortex, CA1, DG), suggesting that brain structure emerges naturally in the learned representation space.",
-    
-    "Lightweight Task-Specific Heads: For downstream applications (e.g., region localization or pathology classification), a small supervised decoder is fine-tuned on top of the frozen or partially frozen backbone, enabling strong performance with limited labeled data."
-  ],
+  image: { src: "/images/figure1.png", alt: "Figure 1: Model Overview", maxWidth: 700 },
+  imageCaption: "Figure 1: LFP2Vec pipeline. The model operates directly on raw Local Field Potential (LFP) signals, applies spatiotemporal tokenization to preserve channel-wise spatial structure and temporal dynamics, and uses a Transformer encoder with self-supervised contrastive pretraining to learn domain-agnostic neural representations. The contrastive objective encourages anatomically similar segments to cluster in latent space. Fine-tuning on downstream tasks (region localization or disease classification) requires only limited labeled data.",
 },
   {
     id: "results",
     kind: "carousel",
     title: "Results",
     theme: "light",
-    bullets: [
-    "Emergent Anatomical Structure: Self-supervised embeddings cluster by brain region (e.g., Cortex, CA1, DG) without explicit anatomical supervision, demonstrating that spatial organization is encoded in the latent space.",
-    
-    "Cross-Session Generalization: The pretrained model maintains performance across animals and recording sessions, indicating robustness to session-specific noise and experimental variability.",
-    
-    "Low-Label Efficiency: Fine-tuning with limited labeled data achieves competitive or superior performance compared to fully supervised baselines trained from scratch.",
-    
-    "Improved Downstream Accuracy: The pretrained backbone consistently outperforms classical feature-based pipelines on region localization and disease classification tasks.",
-    
-    "Cross-Species Transferability: Representations learned from one domain (e.g., rodent) transfer effectively to another (e.g., macaque), suggesting shared neural dynamics are captured in the embedding space.",
-    
-    "Stable Training Dynamics: Contrastive pretraining produces smooth convergence and consistent improvements in downstream metrics compared to random initialization."
-  ],
     items: [
-      { src: "/images/figure2.png", alt: "Result Figure 1", caption: "Result Figure 1 description." },
-      { src: "/images/figure5.png", alt: "Result Figure 2", caption: "Result Figure 2 description." },
-      { src: "/images/supplement_figure2.png", alt: "Result Figure 3", caption: "Result Figure 3 description." },
+      {
+        src: "/images/figure2.png",
+        alt: "Emergent Anatomical Structure",
+        caption: "Emergent Anatomical Structure. Self-supervised embeddings cluster by brain region without explicit anatomical supervision. Embeddings from our pretrained model show clear separation between cortical regions (VISp, VISl, VISpm) and hippocampal structures (CA1, CA3, DG), demonstrating that spatial organization emerges naturally in the learned representation space.",
+      },
+      {
+        src: "/images/figure5.png",
+        alt: "Cross-Session and Cross-Species Generalization",
+        caption: "Cross-Session and Cross-Species Generalization. Zero-shot generalization across recording sessions, animals, and species. The pretrained model maintains consistent performance across diverse experimental conditions (rodent and non-human primate recordings), indicating that the learned representations capture fundamental neural dynamics that transfer across different recording contexts.",
+      },
+      {
+        src: "/images/supplement_figure2.png",
+        alt: "Low-Label Efficiency and Downstream Performance",
+        caption: "Low-Label Efficiency and Downstream Performance. With limited labeled data (10–50%), fine-tuning our pretrained backbone achieves competitive or superior performance compared to fully supervised baselines. The self-supervised pretraining provides a strong feature representation that accelerates convergence and requires minimal labeled data for downstream applications.",
+      },
     ],
   },
   {
