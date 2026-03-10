@@ -46,12 +46,20 @@ type AllenIndexResponse = {
   }>;
 };
 
+type WaveformSnapshot = {
+  label: "start" | "middle" | "end";
+  data: number[][];
+};
+
 type ProbeVisuals = {
   pid: string;
   waveform: number[][];
   lfpPower: number[][];
   muaPower: number[][];
   csd: number[][] | null;
+  waveformSnapshots?: WaveformSnapshot[];
+  lfpPowerSnapshots?: WaveformSnapshot[];
+  muaPowerSnapshots?: WaveformSnapshot[];
 };
 
 type Datasets = Record<DatasetKey, DatasetDef>;
@@ -66,6 +74,7 @@ type DropdownProps = {
 type PanelProps = {
   title: string;
   subtitle?: string;
+  headerExtra?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -533,14 +542,15 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
   );
 }
 
-function Panel({ title, subtitle, children }: PanelProps) {
+function Panel({ title, subtitle, headerExtra, children }: PanelProps) {
   return (
     <div className="card">
-      <header className="card-header">
-        <p className="card-header-title is-size-7">
+      <header className="card-header" style={{ alignItems: "center" }}>
+        <p className="card-header-title is-size-7" style={{ flexShrink: 0 }}>
           {title}
           {subtitle ? <span className="ml-2 has-text-grey">— {subtitle}</span> : null}
         </p>
+        {headerExtra && <div style={{ marginLeft: "auto", paddingRight: 12 }}>{headerExtra}</div>}
       </header>
       <div className="card-content">
         <div className="content">{children}</div>
@@ -584,7 +594,7 @@ function HeatmapSliderCard({
                   whiteSpace: "nowrap",
                 }}
               >
-                Channel (depth)
+                Time
               </span>
             </div>
             {/* Heatmap */}
@@ -592,7 +602,7 @@ function HeatmapSliderCard({
               <HeatmapCanvas data={data} height={height} colormap={colormap} />
               {/* X-axis label */}
               <p className="is-size-7 has-text-grey has-text-centered" style={{ marginTop: 2 }}>
-                Time
+                Channel (depth)
               </p>
             </div>
           </div>
@@ -603,14 +613,10 @@ function HeatmapSliderCard({
   );
 }
 
-/** ---------- IBL helpers ---------- */
-function colorForRegion(name: string, palette: readonly string[]) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
-  const idx = Math.abs(h) % palette.length;
-  return palette[idx];
-}
+/** ---------- Pure helpers (module scope, never recreated) ---------- */
+const transposeMatrix = (m: number[][]) => m[0].map((_, c) => m.map((r) => r[c]));
 
+/** ---------- IBL helpers ---------- */
 function oneHotRegionProbs(acronyms: string[], regionList: readonly string[]) {
   return acronyms.map((a) => {
     const vec = Array(regionList.length).fill(0);
@@ -633,17 +639,16 @@ export default function Lfp2VecDemo() {
   const [iblSessionOptions, setIblSessionOptions] = useState<string[]>([]);
   const [iblPidsBySession, setIblPidsBySession] = useState<Record<string, string[]>>({});
   const [iblRegions, setIblRegions] = useState<string[]>([...REGIONS_BY_DATASET.IBL]);
-  const [iblDownsampled, setIblDownsampled] = useState<IblTrackPoint[]>([]);
 
   // Allen probe options come from /api/allen/pids.
   const [allenPidOptions, setAllenPidOptions] = useState<string[]>([]);
   const [allenSessionOptions, setAllenSessionOptions] = useState<string[]>([]);
   const [allenPidsBySession, setAllenPidsBySession] = useState<Record<string, string[]>>({});
   const [allenRegions, setAllenRegions] = useState<string[]>([...REGIONS_BY_DATASET.Allen]);
-  const [allenDownsampled, setAllenDownsampled] = useState<IblTrackPoint[]>([]);
 
   // Real probe visual data (waveform, heatmaps) for Allen probes.
   const [probeVisuals, setProbeVisuals] = useState<ProbeVisuals | null>(null);
+  const [waveformSnapshot, setWaveformSnapshot] = useState<"start" | "middle" | "end">("start");
 
   // Probe brain visualization image (PNG from batch script)
   const [probeVizImage, setProbeVizImage] = useState<string | null>(null);
@@ -677,13 +682,29 @@ export default function Lfp2VecDemo() {
   const syntheticWaveforms = useMemo(() => generateWaveform(seed, nChannels, 200), [seed]);
   const syntheticLfp = useMemo(() => generateHeatmap(seed + 1, nChannels, 40), [seed]);
   const syntheticMua = useMemo(() => generateHeatmap(seed + 2, nChannels, 40), [seed]);
-  const syntheticCsd = useMemo(() => generateHeatmap(seed + 3, nChannels, 40), [seed]);
 
-  const waveforms = probeVisuals?.waveform ?? syntheticWaveforms;
-  const lfpPower = probeVisuals?.lfpPower ?? syntheticLfp;
-  const muaPower = probeVisuals?.muaPower ?? syntheticMua;
-  const csdProfile = probeVisuals?.csd ?? syntheticCsd;
+  const waveforms = useMemo(() => {
+    const snapshots = probeVisuals?.waveformSnapshots;
+    if (snapshots?.length) {
+      return snapshots.find((s) => s.label === waveformSnapshot)?.data ?? snapshots[0].data;
+    }
+    return probeVisuals?.waveform ?? syntheticWaveforms;
+  }, [probeVisuals, waveformSnapshot, syntheticWaveforms]);
 
+  const lfpPower = useMemo(() => {
+    const snaps = probeVisuals?.lfpPowerSnapshots;
+    const raw = snaps?.length
+      ? (snaps.find((s) => s.label === waveformSnapshot)?.data ?? snaps[0].data)
+      : (probeVisuals?.lfpPower ?? syntheticLfp);
+    return transposeMatrix(raw);
+  }, [probeVisuals, waveformSnapshot, syntheticLfp]);
+  const muaPower = useMemo(() => {
+    const snaps = probeVisuals?.muaPowerSnapshots;
+    const raw = snaps?.length
+      ? (snaps.find((s) => s.label === waveformSnapshot)?.data ?? snaps[0].data)
+      : (probeVisuals?.muaPower ?? syntheticMua);
+    return transposeMatrix(raw);
+  }, [probeVisuals, waveformSnapshot, syntheticMua]);
   /**
    * Region probabilities:
    * - Allen / Neuronexus: synthetic generator
@@ -805,8 +826,6 @@ export default function Lfp2VecDemo() {
       const probs = generateRegionProbs(seed + 4, nChannels, BRAIN_REGIONS);
       if (!cancelled) {
         setRegionProbs(probs);
-        setIblDownsampled([]);
-        setAllenDownsampled([]);
       }
     }
 
@@ -843,7 +862,6 @@ export default function Lfp2VecDemo() {
         if (!cancelled) {
           setIblRegions(regions);
           setRegionProbs(probs);
-          setIblDownsampled(Array.isArray(data.downsampled) ? data.downsampled : []);
           setLoaded(true);
         }
       } catch (error) {
@@ -856,7 +874,6 @@ export default function Lfp2VecDemo() {
               Array(fallbackRegions.length).fill(1 / fallbackRegions.length)
             )
           );
-          setIblDownsampled([]);
           setLoaded(true);
         }
       }
@@ -884,7 +901,6 @@ export default function Lfp2VecDemo() {
           Array(fallbackRegions.length).fill(1 / fallbackRegions.length)
         )
       );
-      setAllenDownsampled([]);
       setLoaded(true);
       return;
     }
@@ -894,7 +910,6 @@ export default function Lfp2VecDemo() {
 
     setAllenRegions(regions);
     setRegionProbs(probs);
-    setAllenDownsampled(Array.isArray(trackData.downsampled) ? trackData.downsampled : []);
     setLoaded(true);
   }, [dataset, probe, nChannels, allenIndex]);
 
@@ -967,31 +982,6 @@ export default function Lfp2VecDemo() {
   }, [dataset, session, probe]);
 
   /** ---------- Colors from regionProbs (works for synthetic + one-hot) ---------- */
-  const estimatedColors = useMemo(() => {
-    // For IBL, color directly from downsampled server track labels.
-    if (dataset === "IBL" && iblDownsampled.length > 0) {
-      return iblDownsampled.map((pt) => colorForRegion(pt.acronym || "UNK", REGION_COLORS));
-    }
-
-    // For Allen, color directly from downsampled server track labels.
-    if (dataset === "Allen" && allenDownsampled.length > 0) {
-      return allenDownsampled.map((pt) => colorForRegion(pt.acronym || "UNK", REGION_COLORS));
-    }
-
-    // Neuronexus colors from synthetic regionProbs
-    return regionProbs.map((p) => {
-      let maxIdx = 0;
-      let maxVal = -Infinity;
-      for (let i = 0; i < p.length; i++) {
-        if (p[i] > maxVal) {
-          maxVal = p[i];
-          maxIdx = i;
-        }
-      }
-      return REGION_COLORS[maxIdx % REGION_COLORS.length];
-    });
-  }, [dataset, regionProbs, iblDownsampled, allenDownsampled]);
-
   /** ---------- Active regions tags ---------- */
   const activeRegionIndices = useMemo(() => {
     const s = new Set<number>();
@@ -1096,8 +1086,25 @@ export default function Lfp2VecDemo() {
       {/* Raw Signal and Labels Side-by-Side */}
       <div className="columns is-multiline">
         <div className="column is-6">
-          <Panel title="Raw LFP Signal" subtitle={`${nChannels}ch × 500ms`}>
-            <WaveformCanvas channels={waveforms} height={160} />
+          <Panel
+            title="Raw LFP Signal"
+            subtitle="20ch × 3s"
+            headerExtra={
+              probeVisuals?.waveformSnapshots ? (
+                <div className="select is-small">
+                  <select
+                    value={waveformSnapshot}
+                    onChange={(e) => setWaveformSnapshot(e.target.value as "start" | "middle" | "end")}
+                  >
+                    <option value="start">Beginning</option>
+                    <option value="middle">Middle</option>
+                    <option value="end">End</option>
+                  </select>
+                </div>
+              ) : undefined
+            }
+          >
+            <WaveformCanvas channels={waveforms} height={260} />
           </Panel>
         </div>
 
@@ -1108,32 +1115,68 @@ export default function Lfp2VecDemo() {
         </div>
       </div>
 
-      {/* Heatmaps: LFP, MUA, CSD Side-by-Side */}
+      {/* Heatmaps: LFP and MUA Side-by-Side */}
       <div className="columns is-multiline">
-        <div className="column is-4">
-          <HeatmapSliderCard
-            title="LFP Power"
-            subtitle="1–300 Hz"
-            data={lfpPower}
-            colormap="viridis"
-            height={180}
-          />
+        <div className="column is-6">
+          {dataset === "Allen" && session && probe ? (
+            <div className="card">
+              <header className="card-header">
+                <p className="card-header-title is-size-7">
+                  LFP Power
+                  <span className="ml-2 has-text-grey">— 1–300 Hz</span>
+                </p>
+              </header>
+              <div className="card-content">
+                <div className="content">
+                  <img
+                    key={`lfp-${session}-${probe}-${waveformSnapshot}`}
+                    src={`/lfp_heatmaps/${session}/${probe}/${waveformSnapshot}.png`}
+                    alt={`LFP heatmap ${waveformSnapshot}`}
+                    style={{ width: "100%", display: "block" }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <HeatmapSliderCard
+              title="LFP Power"
+              subtitle="1–300 Hz"
+              data={lfpPower}
+              colormap="viridis"
+              height={260}
+            />
+          )}
         </div>
 
-        <div className="column is-4">
-          <HeatmapSliderCard
-            title="MUA Power"
-            subtitle="300–6000 Hz"
-            data={muaPower}
-            colormap="inferno"
-            height={180}
-          />
-        </div>
-
-        <div className="column is-4">
-          <Panel title="CSD Profile" subtitle="Current Source Density">
-            <HeatmapCanvas data={csdProfile} height={180} colormap="coolwarm" />
-          </Panel>
+        <div className="column is-6">
+          {dataset === "Allen" && session && probe ? (
+            <div className="card">
+              <header className="card-header">
+                <p className="card-header-title is-size-7">
+                  MUA Power
+                  <span className="ml-2 has-text-grey">— 300–625 Hz envelope</span>
+                </p>
+              </header>
+              <div className="card-content">
+                <div className="content">
+                  <img
+                    key={`mua-${session}-${probe}-${waveformSnapshot}`}
+                    src={`/mua_heatmaps/${session}/${probe}/${waveformSnapshot}.png`}
+                    alt={`MUA heatmap ${waveformSnapshot}`}
+                    style={{ width: "100%", display: "block" }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <HeatmapSliderCard
+              title="MUA Power"
+              subtitle="300–6000 Hz"
+              data={muaPower}
+              colormap="inferno"
+              height={260}
+            />
+          )}
         </div>
       </div>
 
