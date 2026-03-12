@@ -2,6 +2,7 @@ import numpy as np
 import h5py
 from pathlib import Path
 from scipy.signal import butter, sosfiltfilt
+import matplotlib.pyplot as plt
 import spikeinterface as si
 from spikeinterface.preprocessing import bandpass_filter, common_reference
 
@@ -296,6 +297,36 @@ def process_allen_lfp(session_id, probe_id, time_range=None, destripe_method='bp
     return processed, bad_channels, labels
 
 
+def plot_processed_heatmap(processed_data, output_path, v_limit=None):
+    """
+    Plot processed LFP data as a heatmap and save to file.
+
+    Parameters
+    ----------
+    processed_data : np.ndarray, shape (n_channels, n_samples)
+        Processed LFP data from process_allen_lfp()
+    output_path : str or Path
+        Path to save the heatmap image
+    v_limit : float, optional
+        Symmetric color scale limit (vmin=-v_limit, vmax=v_limit).
+        If None, uses 3x the standard deviation of the data.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if v_limit is None:
+        v_limit = 3 * np.std(processed_data)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.imshow(processed_data, aspect='auto', cmap='RdBu_r',
+              origin='lower', vmin=-v_limit, vmax=v_limit)
+    ax.axis('off')
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    fig.savefig(output_path, dpi=150, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
+    print(f"Saved heatmap: {output_path}")
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -307,6 +338,7 @@ if __name__ == "__main__":
                         help="Destriping method (default: bp_pshift_cmr)")
     parser.add_argument("--no-detect-bad", action="store_true", help="Skip bad channel detection")
     parser.add_argument("--no-interpolate", action="store_true", help="Skip bad channel interpolation")
+    parser.add_argument("--save-heatmap", action="store_true", help="Save heatmap visualization of processed data")
 
     args = parser.parse_args()
 
@@ -322,3 +354,9 @@ if __name__ == "__main__":
     )
 
     print(f"Output shape: {processed.shape} (channels × samples)")
+
+    if args.save_heatmap:
+        heatmap_dir = Path(__file__).parent / "public" / "amplitude_heatmaps"
+        heatmap_path = heatmap_dir / f"{args.session_id}_{args.probe_id}_processed.png"
+        plot_processed_heatmap(processed, heatmap_path)
+        print(f"\nHeatmap saved to: {heatmap_path}")
