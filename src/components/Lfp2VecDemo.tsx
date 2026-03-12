@@ -613,6 +613,166 @@ function HeatmapSliderCard({
   );
 }
 
+/** ---------- Heatmap Image with Axis Labels ---------- */
+function HeatmapImageCard({
+  title,
+  subtitle,
+  imageSrc,
+  xLabel = "Time (s)",
+  yLabel = "Channel #",
+  colormap = "viridis",
+}: {
+  title: string;
+  subtitle?: string;
+  imageSrc: string;
+  xLabel?: string;
+  yLabel?: string;
+  colormap?: "viridis" | "inferno" | "coolwarm";
+}) {
+  const getColormapGradient = () => {
+    const gradients: Record<string, string> = {
+      viridis:
+        "linear-gradient(to right, rgb(68,1,84), rgb(59,82,139), rgb(33,145,140), rgb(94,201,98), rgb(253,231,37))",
+      inferno:
+        "linear-gradient(to right, rgb(0,0,4), rgb(87,16,110), rgb(188,55,84), rgb(249,142,9), rgb(252,255,164))",
+      coolwarm:
+        "linear-gradient(to right, rgb(59,76,192), rgb(141,176,254), rgb(245,245,245), rgb(246,153,117), rgb(180,4,38))",
+    };
+    return gradients[colormap] ?? gradients.viridis;
+  };
+
+  return (
+    <div className="card">
+      <header className="card-header">
+        <p className="card-header-title is-size-7">
+          {title}
+          {subtitle ? <span className="ml-2 has-text-grey">— {subtitle}</span> : null}
+        </p>
+      </header>
+      <div className="card-content">
+        <div className="content">
+          <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+            {/* Image with axis labels */}
+            <div style={{ display: "flex", gap: 4 }}>
+              {/* Y-axis label */}
+              <div style={{ display: "flex", alignItems: "center", width: 20 }}>
+                <span
+                  className="is-size-7 has-text-grey"
+                  style={{
+                    writingMode: "vertical-rl",
+                    transform: "rotate(180deg)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {yLabel}
+                </span>
+              </div>
+              {/* Image container */}
+              <div style={{ flex: 1 }}>
+                <img
+                  src={imageSrc}
+                  alt={title}
+                  style={{ width: "100%", display: "block" }}
+                />
+                {/* X-axis label */}
+                <p className="is-size-7 has-text-grey has-text-centered" style={{ marginTop: 4 }}>
+                  {xLabel}
+                </p>
+              </div>
+            </div>
+            {/* Colorbar */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span className="is-size-7 has-text-grey">Low</span>
+              <div
+                style={{
+                  flex: 1,
+                  height: 10,
+                  borderRadius: 3,
+                  background: getColormapGradient(),
+                }}
+              />
+              <span className="is-size-7 has-text-grey">High</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Depth Profile Card with Region Legend */
+function DepthProfileCard({
+  title,
+  subtitle,
+  imageSrc,
+}: {
+  title: string;
+  subtitle?: string;
+  imageSrc: string;
+}) {
+  // Brain regions and their colors (from depth profile legend)
+  const regionLegend = [
+    { name: "DG-mo", color: "#CCFF00" },
+    { name: "Eth", color: "#FF99CC" },
+    { name: "APN", color: "#FF00FF" },
+    { name: "DG-sg", color: "#336633" },
+    { name: "VISl1", color: "#003366" },
+    { name: "ViSam6a", color: "#003366" },
+    { name: "MGv", color: "#FF9999" },
+    { name: "ViSrl4", color: "#003366" },
+    { name: "ViSam5", color: "#0066CC" },
+    { name: "ViS/2/3", color: "#0099FF" },
+    { name: "ViSrl5a", color: "#00CCFF" },
+    { name: "ViSrl5", color: "#00CCFF" },
+    { name: "SSp-bfd5", color: "#339900" },
+    { name: "LGd-ip", color: "#FF6666" },
+    { name: "SUB", color: "#99FF99" },
+  ];
+
+  return (
+    <div className="card">
+      <header className="card-header">
+        <p className="card-header-title is-size-7">
+          {title}
+          {subtitle ? <span className="ml-2 has-text-grey">— {subtitle}</span> : null}
+        </p>
+      </header>
+      <div className="card-content" style={{ padding: "0.75rem" }}>
+        <div className="content" style={{ marginBottom: 0 }}>
+          {/* Image */}
+          <div style={{ marginBottom: 8 }}>
+            <img src={imageSrc} alt={title} style={{ width: "100%", display: "block" }} />
+          </div>
+          {/* Region Legend - compact */}
+          <div style={{ fontSize: "0.7rem" }}>
+            <p className="has-text-weight-semibold has-text-grey" style={{ marginBottom: 4 }}>
+              Predicted Regions:
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+              {regionLegend.map((region) => (
+                <div key={region.name} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      backgroundColor: region.color,
+                      borderRadius: 1,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span className="has-text-grey" style={{ whiteSpace: "nowrap", fontSize: "0.65rem" }}>
+                    {region.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** ---------- Pure helpers (module scope, never recreated) ---------- */
 const transposeMatrix = (m: number[][]) => m[0].map((_, c) => m.map((r) => r[c]));
 
@@ -629,10 +789,11 @@ function oneHotRegionProbs(acronyms: string[], regionList: readonly string[]) {
 /** ---------- Main Component ---------- */
 export default function Lfp2VecDemo() {
   const [dataset, setDataset] = useState<DatasetKey>("Allen");
-  const [session, setSession] = useState<string>(DATASETS.Allen.sessions[0]);
+  const [session, setSession] = useState<string>("768515987");
   const [probe, setProbe] = useState<string>(DATASETS.Allen.probes[0]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const nChannels = 16;
+
 
   // IBL probe options come from /api/ibl/pids.
   const [iblPidOptions, setIblPidOptions] = useState<string[]>([]);
@@ -648,7 +809,7 @@ export default function Lfp2VecDemo() {
 
   // Real probe visual data (waveform, heatmaps) for Allen probes.
   const [probeVisuals, setProbeVisuals] = useState<ProbeVisuals | null>(null);
-  const [waveformSnapshot, setWaveformSnapshot] = useState<"start" | "middle" | "end">("start");
+  const waveformSnapshot = "start"; // Fixed to "start" snapshot
 
   // Probe brain visualization image (PNG from batch script)
   const [probeVizImage, setProbeVizImage] = useState<string | null>(null);
@@ -663,13 +824,6 @@ export default function Lfp2VecDemo() {
     setProbe(DATASETS[dataset].probes[0]);
   }, [dataset]);
 
-  // Neuronexus keeps the original synthetic loading delay behavior.
-  useEffect(() => {
-    if (dataset === "IBL" || dataset === "Allen") return;
-    setLoaded(false);
-    const t = window.setTimeout(() => setLoaded(true), 250);
-    return () => window.clearTimeout(t);
-  }, [dataset, session, probe]);
 
   const seed = useMemo(() => {
     let h = 0;
@@ -714,48 +868,6 @@ export default function Lfp2VecDemo() {
     () => Array.from({ length: nChannels }, () => Array(BRAIN_REGIONS.length).fill(1 / BRAIN_REGIONS.length))
   );
 
-  // For IBL only: load pid list from server-side cached CSV index.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadIblPids() {
-      if (dataset !== "IBL") return;
-      setLoaded(false);
-
-      try {
-        const res = await fetch("/api/ibl/pids");
-        if (!res.ok) throw new Error(`Failed to fetch IBL pids (${res.status})`);
-
-        const data = (await res.json()) as IblPidIndexResponse;
-        const pids = Array.isArray(data.pids) ? data.pids : [];
-        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-        const bySession = data.pidsBySession ?? {};
-
-        if (!cancelled) {
-          setIblSessionOptions(sessions);
-          setIblPidsBySession(bySession);
-          setSession((prev) => (sessions.includes(prev) ? prev : (sessions[0] ?? "")));
-          if (pids.length === 0 || sessions.length === 0) setLoaded(true);
-        }
-      } catch (error) {
-        console.error("Failed to load IBL pids", error);
-        if (!cancelled) {
-          setIblSessionOptions([]);
-          setIblPidsBySession({});
-          setIblPidOptions([]);
-          setSession("");
-          setProbe("");
-          setLoaded(true);
-        }
-      }
-    }
-
-    loadIblPids().catch((e) => console.error(e));
-
-    return () => {
-      cancelled = true;
-    };
-  }, [dataset]);
 
   // Allen index: cached static JSON with sessions, pids, and track data.
   const [allenIndex, setAllenIndex] = useState<AllenIndexResponse | null>(null);
@@ -1024,181 +1136,184 @@ export default function Lfp2VecDemo() {
         </p>
       </div>
 
-      <div className="box">
-        <div className="columns is-multiline is-vcentered">
-          <div className="column is-narrow">
-            <Dropdown
-              label="Dataset"
-              value={dataset}
-              options={Object.keys(DATASETS)}
-              onChange={(v) => setDataset(v as DatasetKey)}
-            />
+      {dataset === "Allen" && (
+        <div className="box">
+          <div className="columns is-multiline is-vcentered">
+            <div className="column is-narrow">
+              <Dropdown label="Dataset" value={dataset} options={["Allen"]} onChange={(v) => setDataset(v as DatasetKey)} />
+            </div>
+
+            <div className="column is-narrow">
+              <Dropdown label="Session" value={session} options={["768515987"]} onChange={setSession} />
+            </div>
+
+            <div className="column is-narrow">
+              <Dropdown label="Probe (pid)" value={probe} options={probeOptions} onChange={setProbe} />
+            </div>
+
+            <div className="column">
+              <div className="tags">
+                {activeRegionIndices.slice(0, 6).map((idx) => (
+                  <span key={idx} className="tag is-light">
+                    {regionNamesForTags[idx] ?? "UNK"}
+                  </span>
+                ))}
+                {!loaded ? (
+                  <span className="tag is-warning is-light">Loading…</span>
+                ) : (
+                  <span className="tag is-success is-light">Ready</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dataset === "Allen" && (
+        <>
+          {/* Probe Brain Visualization */}
+          {probeVizImage && (
+            <div className="content">
+              <h3 className="title is-5">Probe Insertion Visualization</h3>
+            </div>
+          )}
+
+          {probeVizImage && (
+            <div className="box">
+              <figure className="image">
+                <img src={probeVizImage} alt={`Probe ${probe} brain visualization`} />
+              </figure>
+              <p className="is-size-7 has-text-grey mt-3">
+                Coronal (left), Sagittal (center), and Axial (right) views showing probe insertion through Allen Brain Atlas.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {dataset === "Allen" && (
+        <>
+          {/* Compact Layout: Ground Truth and Predictions Side-by-Side */}
+          <div className="content">
+            <h3 className="title is-5">Ground Truth & Predictions</h3>
           </div>
 
-          <div className="column is-narrow">
-            <Dropdown label="Session" value={session} options={sessionOptions} onChange={setSession} />
-          </div>
-
-          <div className="column is-narrow">
-            <Dropdown label={dataset === "IBL" ? "Insertion (pid)" : dataset === "Allen" ? "Probe (pid)" : "Probe"} value={probe} options={probeOptions} onChange={setProbe} />
-          </div>
-
-          <div className="column">
-            <div className="tags">
-              {activeRegionIndices.slice(0, 6).map((idx) => (
-                <span key={idx} className="tag is-light">
-                  {regionNamesForTags[idx] ?? "UNK"}
-                </span>
-              ))}
-              {!loaded ? (
-                <span className="tag is-warning is-light">Loading…</span>
+          {/* Raw LFP Signal (Full Width) */}
+          <div className="columns is-multiline">
+            <div className="column is-12">
+              {session && probe ? (
+                <HeatmapImageCard
+                  title="Raw LFP Signal"
+                  subtitle="Raw amplitude over 3 seconds"
+                  imageSrc={`/raw_lfp_heatmaps/${session}/${probe}/bp_pshift_cmr/${waveformSnapshot}.png`}
+                  xLabel="Time (s)"
+                  yLabel="Channel #"
+                  colormap="coolwarm"
+                />
               ) : (
-                <span className="tag is-success is-light">Ready</span>
+                <Panel title="Raw LFP Signal" subtitle="20ch × 3s">
+                  <WaveformCanvas channels={waveforms} height={260} />
+                </Panel>
               )}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Probe Brain Visualization */}
-      {probeVizImage && (
-        <div className="content">
-          <h3 className="title is-5">Probe Insertion Visualization</h3>
-        </div>
-      )}
+          {/* Heatmaps: LFP and MUA Side-by-Side */}
+          <div className="columns is-multiline">
+            <div className="column is-6">
+              {session && probe ? (
+                <HeatmapImageCard
+                  title="LFP Power"
+                  subtitle="1–300 Hz"
+                  imageSrc={`/lfp_heatmaps/${session}/${probe}/bp_pshift_cmr/${waveformSnapshot}.png`}
+                  xLabel="Time (s)"
+                  yLabel="Channel #"
+                  colormap="viridis"
+                />
+              ) : (
+                <HeatmapSliderCard
+                  title="LFP Power"
+                  subtitle="1–300 Hz"
+                  data={lfpPower}
+                  colormap="viridis"
+                  height={260}
+                />
+              )}
+            </div>
 
-      {probeVizImage && (
-        <div className="box">
-          <figure className="image">
-            <img src={probeVizImage} alt={`Probe ${probe} brain visualization`} />
-          </figure>
-          <p className="is-size-7 has-text-grey mt-3">
-            Coronal (left), Sagittal (center), and Axial (right) views showing probe insertion through Allen Brain Atlas.
-          </p>
-        </div>
-      )}
+            <div className="column is-6">
+              {session && probe ? (
+                <HeatmapImageCard
+                  title="MUA Power"
+                  subtitle="300–625 Hz envelope"
+                  imageSrc={`/mua_heatmaps/${session}/${probe}/bp_pshift_cmr/${waveformSnapshot}.png`}
+                  xLabel="Time (s)"
+                  yLabel="Channel #"
+                  colormap="inferno"
+                />
+              ) : (
+                <HeatmapSliderCard
+                  title="MUA Power"
+                  subtitle="300–6000 Hz"
+                  data={muaPower}
+                  colormap="inferno"
+                  height={260}
+                />
+              )}
+            </div>
+          </div>
 
-      {/* Compact Layout: Ground Truth and Predictions Side-by-Side */}
-      <div className="content">
-        <h3 className="title is-5">Ground Truth & Predictions</h3>
-      </div>
+          {/* Depth Profile & Prediction Heatmap (Side-by-Side) */}
+          <div className="columns is-multiline">
+            <div className="column is-6">
+              {session && probe ? (
+                <DepthProfileCard
+                  title="Depth Profile"
+                  subtitle="Predicted region distribution per channel"
+                  imageSrc={`/predictions/depth_profile_${probe}.png`}
+                />
+              ) : (
+                <Panel title="Predicted Labels" subtitle="argmax region per channel">
+                  <RegionLabelStrip probs={regionProbs} height={160} />
+                </Panel>
+              )}
+            </div>
 
-      {/* Raw Signal and Labels Side-by-Side */}
-      <div className="columns is-multiline">
-        <div className="column is-6">
-          <Panel
-            title="Raw LFP Signal"
-            subtitle="20ch × 3s"
-            headerExtra={
-              probeVisuals?.waveformSnapshots ? (
-                <div className="select is-small">
-                  <select
-                    value={waveformSnapshot}
-                    onChange={(e) => setWaveformSnapshot(e.target.value as "start" | "middle" | "end")}
-                  >
-                    <option value="start">Beginning</option>
-                    <option value="middle">Middle</option>
-                    <option value="end">End</option>
-                  </select>
-                </div>
-              ) : undefined
-            }
-          >
-            <WaveformCanvas channels={waveforms} height={260} />
-          </Panel>
-        </div>
-
-        <div className="column is-6">
-          <Panel title="Predicted Labels" subtitle="argmax region per channel">
-            <RegionLabelStrip probs={regionProbs} height={160} />
-          </Panel>
-        </div>
-      </div>
-
-      {/* Heatmaps: LFP and MUA Side-by-Side */}
-      <div className="columns is-multiline">
-        <div className="column is-6">
-          {dataset === "Allen" && session && probe ? (
-            <div className="card">
-              <header className="card-header">
-                <p className="card-header-title is-size-7">
-                  LFP Power
-                  <span className="ml-2 has-text-grey">— 1–300 Hz</span>
-                </p>
-              </header>
-              <div className="card-content">
-                <div className="content">
-                  <img
-                    key={`lfp-${session}-${probe}-${waveformSnapshot}`}
-                    src={`/lfp_heatmaps/${session}/${probe}/${waveformSnapshot}.png`}
-                    alt={`LFP heatmap ${waveformSnapshot}`}
-                    style={{ width: "100%", display: "block" }}
-                  />
+            <div className="column is-6">
+              <div className="card">
+                <header className="card-header">
+                  <p className="card-header-title is-size-7">
+                    Prediction Heatmap
+                    <span className="ml-2 has-text-grey">— Per-channel region probabilities</span>
+                  </p>
+                </header>
+                <div className="card-content" style={{ padding: "0.75rem" }}>
+                  <div className="content" style={{ overflow: "hidden" }}>
+                    <img
+                      src="/predictions/prediction_heatmap.png"
+                      alt="Prediction Heatmap"
+                      style={{ width: "100%", display: "block", maxHeight: "1200px", objectFit: "cover" }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          ) : (
-            <HeatmapSliderCard
-              title="LFP Power"
-              subtitle="1–300 Hz"
-              data={lfpPower}
-              colormap="viridis"
-              height={260}
-            />
-          )}
-        </div>
+          </div>
+        </>
+      )}
 
-        <div className="column is-6">
-          {dataset === "Allen" && session && probe ? (
-            <div className="card">
-              <header className="card-header">
-                <p className="card-header-title is-size-7">
-                  MUA Power
-                  <span className="ml-2 has-text-grey">— 300–625 Hz envelope</span>
-                </p>
-              </header>
-              <div className="card-content">
-                <div className="content">
-                  <img
-                    key={`mua-${session}-${probe}-${waveformSnapshot}`}
-                    src={`/mua_heatmaps/${session}/${probe}/${waveformSnapshot}.png`}
-                    alt={`MUA heatmap ${waveformSnapshot}`}
-                    style={{ width: "100%", display: "block" }}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <HeatmapSliderCard
-              title="MUA Power"
-              subtitle="300–6000 Hz"
-              data={muaPower}
-              colormap="inferno"
-              height={260}
-            />
-          )}
+      {dataset === "Allen" && (
+        <div className="box mt-5">
+          <div className="content">
+            <h4 className="title is-6">Method (high-level)</h4>
+            <p>
+              LFP2Vec adapts an audio-pretrained wav2vec 2.0 transformer via continued self-supervised learning on
+              unlabeled LFP data, then fine-tunes for anatomical region decoding. This demo uses real region labels
+              from Allen Brain Observatory and IBL when available, and synthetic/seeded signals for illustration.
+            </p>
+          </div>
         </div>
-      </div>
-
-      {/* Region Probability (Full Width, Compact) */}
-      <div className="columns is-multiline">
-        <div className="column is-12">
-          <Panel title="Region Probability" subtitle="Per-channel posterior">
-            <RegionProbChart probs={regionProbs} height={200} />
-          </Panel>
-        </div>
-      </div>
-
-      <div className="box mt-5">
-        <div className="content">
-          <h4 className="title is-6">Method (high-level)</h4>
-          <p>
-            LFP2Vec adapts an audio-pretrained wav2vec 2.0 transformer via continued self-supervised learning on
-            unlabeled LFP data, then fine-tunes for anatomical region decoding. This demo uses real region labels
-            from Allen Brain Observatory and IBL when available, and synthetic/seeded signals for illustration.
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

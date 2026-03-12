@@ -65,3 +65,5 @@ __pycache__/
 # other local directories
 /website_lfp2vec/
 data.py
+/old
+split_depth_profile.py
