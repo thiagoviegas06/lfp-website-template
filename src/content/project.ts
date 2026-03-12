@@ -71,17 +71,17 @@ export const sections: Section[] = [
       {
         src: "/images/figure2.png",
         alt: "Emergent Anatomical Structure",
-        caption: "Emergent Anatomical Structure. Self-supervised embeddings cluster by brain region without explicit anatomical supervision. Embeddings from our pretrained model show clear separation between cortical regions (VISp, VISl, VISpm) and hippocampal structures (CA1, CA3, DG), demonstrating that spatial organization emerges naturally in the learned representation space.",
+        caption: "Model performance comparison in region decoding across rodent datasets. a) Balanced test accuracy and macro-F1 (left) for brain-region decoding on three mouse LFP datasets (Neuronexus, Allen, IBL). Silhouette score and linear probing accuracy (right) quantifies how well embeddings cluster by brain region, session, and probe identity in Allen sessions. b) Confusion matrices showing the brain region classification performance across all models in Allen sessions. c) PCA projections of channel embeddings for Allen sessions, colored by distinct brain regions, showing clusters by brain regions. d) Channel-wise predicted regions on a Neuronexus probe compared to ground truth. Each dot represents a region probability pie chart (right top), with temporal smoothing (right middle) and spatial smoothing (right bottom) improving prediction. e) Cross lab generalization matrix for zero-shot (middle) and one-shot (right) performance across three mice datasets (left), here high off-diagonal values indicate good generalization performance from one lab to another",
       },
       {
         src: "/images/figure5.png",
         alt: "Cross-Session and Cross-Species Generalization",
-        caption: "Cross-Session and Cross-Species Generalization. Zero-shot generalization across recording sessions, animals, and species. The pretrained model maintains consistent performance across diverse experimental conditions (rodent and non-human primate recordings), indicating that the learned representations capture fundamental neural dynamics that transfer across different recording contexts.",
+        caption: " Lfp2vec representations transfer across laboratories, probe geometries, and species. a) Cross-species generalization: Lfp2vec outperforms spectrograms, SimCLR, and BrainBERT in balanced accuracy and macro-F1 for classifying SMA, M1, and BG. b) Confusion matrices show Lfp2vec achieves the highest accuracy and clearest separation across regions (BG, SMA, M1). c) PCA plots reveal Lfp2vec embeddings form distinct, region-specific clusters, generalizing beyond rodent data.",
       },
       {
         src: "/images/supplement_figure2.png",
         alt: "Low-Label Efficiency and Downstream Performance",
-        caption: "Low-Label Efficiency and Downstream Performance. With limited labeled data (10–50%), fine-tuning our pretrained backbone achieves competitive or superior performance compared to fully supervised baselines. The self-supervised pretraining provides a strong feature representation that accelerates convergence and requires minimal labeled data for downstream applications.",
+        caption: "Disease Prediction and Abnormality Study by Brain Regions. a) Classification performance (accuracy and F1 score) on distinguishing Alzheimer’s disease (AD) model mice (App x Psen1) from healthy controls using different self-supervised models. Lfp2vec consistently outperforms SimCLR and BrainBERT. b) PCA projection of learned Lfp2vec embeddings shows distinct clustering between diseased and healthy animals. c–d) Channel-wise predictions and region-level abnormality scores for AD model mice (c) and healthy controls (d). Each dot represents a channel’s prediction across trials. Bar plots below summarize region-wise abnormality scores, showing which anatomical regions have higher deviation from normal activity. CA3 and DG show the least abnormal signals in AD mice, while abnormality scores in healthy controls remain low across all regions.",
       },
     ],
   },

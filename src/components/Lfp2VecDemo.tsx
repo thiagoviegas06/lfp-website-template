@@ -1198,13 +1198,13 @@ export default function Lfp2VecDemo() {
             <h3 className="title is-5">Neurophysiological Signals</h3>
           </div>
 
-          {/* Raw LFP Signal (Full Width) */}
+          {/* Neurophysiological Signals: Raw LFP, LFP Power, MUA Power (3-column) */}
           <div className="columns is-multiline">
-            <div className="column is-12">
+            <div className="column is-4">
               {session && probe ? (
                 <HeatmapImageCard
-                  title="Raw LFP Signal"
-                  subtitle="Raw amplitude over 3 seconds"
+                  title="Raw LFP"
+                  subtitle="Amplitude over 3 seconds"
                   imageSrc={`/raw_lfp_heatmaps/${session}/${probe}/bp_pshift_cmr/${waveformSnapshot}.png`}
                   xLabel="Time (s)"
                   yLabel="Channel #"
@@ -1216,11 +1216,8 @@ export default function Lfp2VecDemo() {
                 </Panel>
               )}
             </div>
-          </div>
 
-          {/* Heatmaps: LFP and MUA Side-by-Side */}
-          <div className="columns is-multiline">
-            <div className="column is-6">
+            <div className="column is-4">
               {session && probe ? (
                 <HeatmapImageCard
                   title="LFP Power"
@@ -1241,7 +1238,7 @@ export default function Lfp2VecDemo() {
               )}
             </div>
 
-            <div className="column is-6">
+            <div className="column is-4">
               {session && probe ? (
                 <HeatmapImageCard
                   title="MUA Power"
