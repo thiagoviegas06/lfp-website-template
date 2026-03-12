@@ -89,7 +89,7 @@ export const sections: Section[] = [
     id: "poster",
     kind: "pdf",
     title: "Poster",
-    src: "/pdfs/poster.pdf",
+    src: "/pdfs/lfp2vec_cosyne_poster.pdf",
     height: 550,
   },
   {
